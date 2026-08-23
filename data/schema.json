@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Doraemon Gadget",
+  "type": "object",
+  "required": ["id", "name_jp", "name_en", "aliases", "summary", "media_origin", "categories", "sources", "engineering"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^DORA-GADGET-[0-9]{4}$"},
+    "name_ko": {"type": ["string", "null"]},
+    "name_jp": {"type": "string"},
+    "name_en": {"type": "string"},
+    "aliases": {"type": "array", "items": {"type": "string"}},
+    "summary": {"type": "string"},
+    "media_origin": {
+      "type": "array",
+      "items": {"type": "string", "enum": ["manga", "anime_1979", "anime_2005", "movie", "game", "spinoff", "unknown"]}
+    },
+    "categories": {"type": "array", "items": {"type": "string"}},
+    "capabilities": {"type": "array", "items": {"type": "string"}},
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "url"],
+        "properties": {
+          "name": {"type": "string"},
+          "url": {"type": "string"},
+          "note": {"type": "string"}
+        }
+      }
+    },
+    "engineering": {
+      "type": "object",
+      "required": ["analyzed", "feasibility", "project_id"],
+      "properties": {
+        "analyzed": {"type": "boolean"},
+        "feasibility": {"type": ["string", "null"], "enum": ["A", "B", "C", "D", "E", null]},
+        "project_id": {"type": ["string", "null"]}
+      }
+    }
+  }
+}
