@@ -7,6 +7,11 @@ on:
       - 'scripts/build_catalog.py'
       - 'data/gadgets.seed.json'
       - '.github/workflows/build-catalog.yml'
+  pull_request:
+    paths:
+      - 'scripts/build_catalog.py'
+      - 'data/gadgets.seed.json'
+      - '.github/workflows/build-catalog.yml'
 
 permissions:
   contents: write
@@ -23,7 +28,13 @@ jobs:
         run: python scripts/build_catalog.py
       - name: Show catalog count
         run: python -c "import json; d=json.load(open('data/master.json')); print('records:', d['record_count'])"
+      - name: Upload generated catalog
+        uses: actions/upload-artifact@v4
+        with:
+          name: master-catalog
+          path: data/master.json
       - name: Commit generated catalog
+        if: github.event_name != 'pull_request'
         run: |
           if git diff --quiet -- data/master.json; then
             echo 'No catalog changes.'
