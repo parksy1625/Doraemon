@@ -1,0 +1,25 @@
+{
+  "source": "Yobubble/doraemon-gadgets-search-engine documents/base2.json",
+  "policy": "Factual name metadata only; third-party descriptions are not republished.",
+  "records": [
+    {"name_en":"Ultra Special Mighty Strong Super Armor","name_jp":"ウルトラ・スペシャルマイティ・ストロングスーパーよろい"},
+    {"name_en":"Umatake","name_jp":"ウマタケ"},
+    {"name_en":"Underground Exploration Vehicle","name_jp":""},
+    {"name_en":"Underwater Buggy","name_jp":"水中バギー"},
+    {"name_en":"Upgrade Light","name_jp":"グレードアップライト"},
+    {"name_en":"Urashima Candy","name_jp":"ウラシマキャンディー"},
+    {"name_en":"Vending Time Machine","name_jp":"自動販売タイムマシン"},
+    {"name_en":"Voice Candy","name_jp":"声のキャンディー"},
+    {"name_en":"Voice Thickener","name_jp":"コエカタマリン"},
+    {"name_en":"Voodoo Camera","name_jp":"のろいのカメラ"},
+    {"name_en":"Watermelon Pen","name_jp":"スイカペン"},
+    {"name_en":"Weather Exchange Map","name_jp":"お天気コーカン地図"},
+    {"name_en":"Werewolf Cream","name_jp":"おおかみ男クリーム"},
+    {"name_en":"What-If Phone Booth","name_jp":"もしもボックス"},
+    {"name_en":"Wishing Star","name_jp":"ねがい星"},
+    {"name_en":"Woodcutter's Spring","name_jp":"きこりの泉"},
+    {"name_en":"Wrestling Killer","name_jp":"ころばし屋"},
+    {"name_en":"Wrestling Killer Z","name_jp":"ころばし屋Z"},
+    {"name_en":"Y Candle","name_jp":"Yロウ"}
+  ]
+}
