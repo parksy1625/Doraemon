@@ -1,0 +1,15 @@
+{
+  "version": "0.1",
+  "purpose": "원작 만화 도구를 우선 검증하기 위한 체크리스트. 숫자 목표를 임의로 확정하지 않고, 일본어 원작 목록과 각 항목의 최초 등장 근거를 확인해 verified=true로 전환한다.",
+  "rules": {
+    "primary_key": "canonical_name_jp",
+    "required_for_verified": ["canonical_name_jp", "source_title", "source_locator"],
+    "merge_aliases": true,
+    "exclude_anime_only": true,
+    "exclude_movie_only": true,
+    "exclude_game_only": true,
+    "do_not_copy_long_descriptions": true
+  },
+  "statuses": ["candidate", "verified_manga", "alias", "conflict", "excluded_non_manga"],
+  "records": []
+}
