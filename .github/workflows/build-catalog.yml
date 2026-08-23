@@ -21,6 +21,8 @@ jobs:
           python-version: '3.12'
       - name: Build master catalog
         run: python scripts/build_catalog.py
+      - name: Show catalog count
+        run: python -c "import json; d=json.load(open('data/master.json')); print('records:', d['record_count'])"
       - name: Commit generated catalog
         run: |
           if git diff --quiet -- data/master.json; then
