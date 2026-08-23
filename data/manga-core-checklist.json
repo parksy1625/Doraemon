@@ -1,6 +1,6 @@
 {
-  "version": "0.1",
-  "purpose": "원작 만화 도구를 우선 검증하기 위한 체크리스트. 숫자 목표를 임의로 확정하지 않고, 일본어 원작 목록과 각 항목의 최초 등장 근거를 확인해 verified=true로 전환한다.",
+  "version": "0.2",
+  "purpose": "원작 만화 도구를 우선 검증하기 위한 체크리스트. 숫자 목표를 임의로 확정하지 않고, 일본어 원작 목록과 각 항목의 최초 등장 근거를 확인해 verified_manga로 전환한다.",
   "rules": {
     "primary_key": "canonical_name_jp",
     "required_for_verified": ["canonical_name_jp", "source_title", "source_locator"],
@@ -10,6 +10,33 @@
     "exclude_game_only": true,
     "do_not_copy_long_descriptions": true
   },
+  "sources": [
+    {"id":"moshimodogu-index","title":"もしも道具 ひみつ道具一覧","url":"https://moshimodogu.com/indexes/ichiran"},
+    {"id":"tv-asahi-catalog","title":"テレビ朝日 ドラえもん ひみつ道具カタログ","url":"https://www.tv-asahi.co.jp/doraemon/tool/"},
+    {"id":"dsdb-original","title":"ドラえもんSuperDatabase 原作ひみつ道具","url":"https://dsdb.jp/gadget/"}
+  ],
   "statuses": ["candidate", "verified_manga", "alias", "conflict", "excluded_non_manga"],
-  "records": []
+  "verification_note": "현재 records는 후보 단계다. 목록에 존재한다는 사실만으로 원작 최초 등장을 확정하지 않는다.",
+  "records": [
+    {"canonical_name_jp":"タケコプター","name_ko":"대나무 헬리콥터","name_en":"Take-copter","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"},
+    {"canonical_name_jp":"どこでもドア","name_ko":"어디로든 문","name_en":"Anywhere Door","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"},
+    {"canonical_name_jp":"タイムマシン","name_ko":"타임머신","name_en":"Time Machine","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"},
+    {"canonical_name_jp":"タイムふろしき","name_ko":"타임보자기","name_en":"Time Cloth","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"},
+    {"canonical_name_jp":"スモールライト","name_ko":"스몰라이트","name_en":"Small Light","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"},
+    {"canonical_name_jp":"ビッグライト","name_ko":"빅라이트","name_en":"Big Light","status":"candidate","source_title":"テレビ朝日 ドラえもん ひみつ道具カタログ","source_locator":"tool-catalog"},
+    {"canonical_name_jp":"アンキパン","name_ko":"암기빵","name_en":"Memory Bread","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"},
+    {"canonical_name_jp":"とうめいマント","name_ko":"투명망토","name_en":"Invisible Cape","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"},
+    {"canonical_name_jp":"テキオー灯","name_ko":"적응등","name_en":"Adaptation Light","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"},
+    {"canonical_name_jp":"空気砲","name_ko":"공기포","name_en":"Air Cannon","status":"candidate","source_title":"テレビ朝日 ドラえもん ひみつ道具カタログ","source_locator":"tool-catalog"},
+    {"canonical_name_jp":"四次元ポケット","name_ko":"4차원 주머니","name_en":"4D Pocket","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"},
+    {"canonical_name_jp":"もしもボックス","name_ko":"만약에 박스","name_en":"What-If Phone Booth","status":"candidate","source_title":"テレビ朝日 ドラえもん ひみつ道具カタログ","source_locator":"tool-catalog"},
+    {"canonical_name_jp":"ほんやくコンニャク","name_ko":"통역곤약","name_en":"Translation Konjac","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"},
+    {"canonical_name_jp":"ガリバートンネル","name_ko":"갈리버 터널","name_en":"Gulliver Tunnel","status":"candidate","source_title":"Yobubble/doraemon-gadgets-search-engine","source_locator":"upstream-name-metadata"},
+    {"canonical_name_jp":"フエルミラー","name_ko":"복사거울","name_en":"Multiplying Mirror","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"},
+    {"canonical_name_jp":"どくさいスイッチ","name_ko":"독재자 스위치","name_en":"Dictator Switch","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"},
+    {"canonical_name_jp":"タイムテレビ","name_ko":"타임 TV","name_en":"Time TV","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"},
+    {"canonical_name_jp":"どこでも大ほう","name_ko":"어디로든 대포","name_en":"Anywhere Cannon","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"},
+    {"canonical_name_jp":"オールマイティーパス","name_ko":"올마이티 패스","name_en":"Almighty Pass","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"},
+    {"canonical_name_jp":"通りぬけフープ","name_ko":"통과 후프","name_en":"Through Hoop","status":"candidate","source_title":"もしも道具 ひみつ道具一覧","source_locator":"name-index"}
+  ]
 }
