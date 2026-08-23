@@ -1,0 +1,20 @@
+{
+  "source": "Yobubble/doraemon-gadgets-search-engine documents/base2.json",
+  "policy": "Factual name metadata only; third-party descriptions are not republished.",
+  "records": [
+    {"name_en":"Soul Marker","name_jp":"たましいマーカー"},
+    {"name_en":"Space Glue","name_jp":"空間接着剤"},
+    {"name_en":"Space-Bending Tape","name_jp":"空間ひんまげテープ"},
+    {"name_en":"Specter Cream Set","name_jp":"妖怪クリームセット"},
+    {"name_en":"Spy Set","name_jp":"スパイセット"},
+    {"name_en":"Storybook Shoes","name_jp":""},
+    {"name_en":"Straight Hole","name_jp":"ストレートホール"},
+    {"name_en":"String Phone without a String","name_jp":"糸なし糸電話"},
+    {"name_en":"Substitution Rope","name_jp":"入れかえロープ"},
+    {"name_en":"Substitution Sticker","name_jp":"代用シール"},
+    {"name_en":"Super Gloves","name_jp":"スーパー手袋"},
+    {"name_en":"Super Gourmet Spice","name_jp":"スーパーグルメスパイス"},
+    {"name_en":"Super Mobile Bath 1010","name_jp":"スーパー移動風呂1010"},
+    {"name_en":"Take-copter","name_jp":"タケコプター"}
+  ]
+}
