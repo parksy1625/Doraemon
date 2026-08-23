@@ -1,0 +1,31 @@
+{
+  "note": "Potential duplicate or alias groups discovered during upstream normalization.",
+  "groups": [
+    {
+      "canonical_jp": "夢はしご",
+      "names_en": ["Dream Ladder", "Dream Stairs"],
+      "status": "review"
+    },
+    {
+      "canonical_jp": "虫スカン",
+      "names_en": ["Bug Off", "Flashbang"],
+      "status": "conflict",
+      "note": "Likely upstream metadata error; do not merge automatically."
+    },
+    {
+      "canonical_jp": "ほんやくコンニャク",
+      "names_en": ["Translation Tool", "Translation Konjac"],
+      "status": "alias"
+    },
+    {
+      "canonical_jp": "暗記パン",
+      "names_en": ["Copying Toast", "Memory Bread", "Memorization Bread"],
+      "status": "alias"
+    },
+    {
+      "canonical_jp": "フエルミラー",
+      "names_en": ["Duplicate Mirror", "Multiplying Mirror"],
+      "status": "alias"
+    }
+  ]
+}
