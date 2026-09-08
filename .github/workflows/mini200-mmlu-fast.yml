@@ -1,0 +1,57 @@
+name: Mini-200 Fast MMLU Calibration
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'mini200_eval/**'
+      - '.github/workflows/mini200-mmlu-fast.yml'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      HF_HUB_DISABLE_XET: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+      MODEL_ID: 'HuggingFaceTB/SmolLM2-135M-Instruct'
+      MMLU_N: '100'
+      SIDECAR: '../mini200_eval_artifact/mini200_ci_out/sidecar_fp16.pt'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download V0.5.3 sidecar
+        uses: actions/download-artifact@v4
+        with:
+          name: mini200-v053-results-3
+          path: mini200_eval_artifact
+          run-id: 34258096613
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CPU dependencies
+        run: |
+          python -m pip install -U pip
+          python -m pip install torch==2.10.0 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install 'transformers>=4.48,<5' 'datasets>=3,<5' 'accelerate>=1,<2' 'safetensors>=0.4' 'huggingface_hub>=0.28'
+      - name: Evaluate MMLU raw and calibrated
+        working-directory: mini200_eval
+        run: python eval_v053_calibrated.py 2>&1 | tee mmlu_eval.log
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mini200-mmlu-calibrated-${{ github.run_number }}
+          retention-days: 7
+          path: |
+            mini200_eval/mmlu_eval.log
+            mini200_eval/eval_out/mmlu_calibrated.json
