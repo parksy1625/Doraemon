@@ -1,0 +1,161 @@
+name: Build Nebula Air 1 Mod
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/nebula-air1-build.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Nebula 3.8.1 XAPK
+        run: |
+          set -euxo pipefail
+          curl -L --fail --retry 4 --retry-delay 5 \
+            -A "Mozilla/5.0" \
+            "https://d.apkpure.net/b/XAPK/ai.nreal.nebula.universal?version=latest" \
+            -o Nebula_3.8.1_original.xapk
+          ls -lh Nebula_3.8.1_original.xapk
+          unzip -t Nebula_3.8.1_original.xapk >/dev/null
+
+      - name: Extract XAPK
+        run: |
+          set -euxo pipefail
+          mkdir xapk
+          unzip -q Nebula_3.8.1_original.xapk -d xapk
+          find xapk -maxdepth 2 -type f -printf "%p %k KB\n" | sort
+
+      - name: Patch base APK compatibility data
+        run: |
+          set -euxo pipefail
+          BASE="xapk/ai.nreal.nebula.universal.apk"
+          python3 - <<'PY'
+          import zipfile, json, os, shutil, tempfile, re
+          from pathlib import Path
+
+          apk=Path("xapk/ai.nreal.nebula.universal.apk")
+          tmp=apk.with_suffix(".patched.apk")
+          changed=[]
+          found=[]
+
+          def patch_obj(o, path="root"):
+              edits=0
+              if isinstance(o, dict):
+                  for k,v in list(o.items()):
+                      kl=str(k).lower()
+                      if k=="otherModel" and v is not True:
+                          o[k]=True; edits+=1; changed.append(path+"."+str(k))
+                      elif k=="versionCode" and str(v) in {"540","3.8.1","5124"}:
+                          if str(v)!="5124":
+                              o[k]=5124 if isinstance(v,int) else "5124"
+                              edits+=1; changed.append(path+"."+str(k))
+                      elif isinstance(v,(dict,list)):
+                          edits += patch_obj(v, path+"."+str(k))
+                      # Add current Samsung model to explicit model allowlists when obvious.
+                      if isinstance(v,list) and ("model" in kl or "device" in kl):
+                          if all(isinstance(x,str) for x in v) and v and "SM-S911N" not in v:
+                              if any(re.match(r"SM-[A-Z0-9-]+$", x) for x in v):
+                                  v.append("SM-S911N"); edits+=1; changed.append(path+"."+str(k)+"[+SM-S911N]")
+              elif isinstance(o,list):
+                  for i,v in enumerate(o):
+                      if isinstance(v,(dict,list)):
+                          edits += patch_obj(v, path+f"[{i}]")
+              return edits
+
+          with zipfile.ZipFile(apk,"r") as zin, zipfile.ZipFile(tmp,"w") as zout:
+              for info in zin.infolist():
+                  data=zin.read(info.filename)
+                  low=info.filename.lower()
+                  if low.endswith("initdata.json"):
+                      found.append(info.filename)
+                      try:
+                          obj=json.loads(data.decode("utf-8-sig"))
+                          n=patch_obj(obj, info.filename)
+                          if n:
+                              data=json.dumps(obj,ensure_ascii=False,separators=(",",":")).encode("utf-8")
+                      except Exception as e:
+                          print("WARN initData patch failed", info.filename, e)
+                  # Strip old signature files; apksigner will create new signatures.
+                  if info.filename.startswith("META-INF/") and info.filename.upper().endswith((".RSA",".DSA",".EC",".SF",".MF")):
+                      continue
+                  zout.writestr(info, data)
+
+          print("initData files:", found)
+          print("changed:", changed)
+          if not found:
+              raise SystemExit("initData.json not found in base APK")
+          tmp.replace(apk)
+          PY
+          unzip -t "$BASE" >/dev/null
+          ls -lh "$BASE"
+
+      - name: Install Android build tools
+        run: |
+          set -euxo pipefail
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;35.0.0"
+          echo "$ANDROID_HOME/build-tools/35.0.0" >> "$GITHUB_PATH"
+
+      - name: Generate local test signing key
+        run: |
+          set -euxo pipefail
+          keytool -genkeypair -v \
+            -keystore nebula-air1-test.jks \
+            -storepass nebulaair1 \
+            -keypass nebulaair1 \
+            -alias nebulaair1 \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Nebula Air1 Community Test,O=Community,C=KR"
+
+      - name: Zipalign and sign all split APKs
+        run: |
+          set -euxo pipefail
+          mkdir -p signed
+          for apk in xapk/*.apk; do
+            name="$(basename "$apk")"
+            echo "Signing $name"
+            zipalign -f -p 4 "$apk" "signed/$name.aligned.apk"
+            apksigner sign \
+              --ks nebula-air1-test.jks \
+              --ks-pass pass:nebulaair1 \
+              --key-pass pass:nebulaair1 \
+              --ks-key-alias nebulaair1 \
+              --out "signed/$name" \
+              "signed/$name.aligned.apk"
+            rm "signed/$name.aligned.apk"
+            apksigner verify --verbose "signed/$name"
+          done
+
+      - name: Rebuild XAPK
+        run: |
+          set -euxo pipefail
+          cp xapk/manifest.json signed/manifest.json
+          [ -f xapk/icon.png ] && cp xapk/icon.png signed/icon.png || true
+          cd signed
+          zip -0 -r ../Nebula_3.8.1_Air1_Mod_v0.1-test.xapk ./*
+          cd ..
+          unzip -t Nebula_3.8.1_Air1_Mod_v0.1-test.xapk >/dev/null
+          sha256sum Nebula_3.8.1_Air1_Mod_v0.1-test.xapk | tee SHA256SUMS.txt
+          ls -lh Nebula_3.8.1_Air1_Mod_v0.1-test.xapk
+
+      - name: Publish GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euxo pipefail
+          TAG="nebula-air1-v0.1-test"
+          gh release delete "$TAG" --yes --cleanup-tag || true
+          gh release create "$TAG" \
+            "Nebula_3.8.1_Air1_Mod_v0.1-test.xapk" \
+            "SHA256SUMS.txt" \
+            --title "Nebula Air 1 Mod v0.1-test" \
+            --prerelease \
+            --notes "Experimental community test build for Nreal/XREAL Air 1. Based on Nebula 3.8.1. Compatibility data patched; all split APKs re-signed with the same local test key. Full on-device AR Space/3DoF validation is still pending."
