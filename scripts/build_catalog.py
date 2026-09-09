@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Build a normalized Doraemon gadget catalog from public source datasets."""
+"""Build a normalized Doraemon gadget catalog from public source datasets.
+
+Validation branch note: this file is intentionally touched so the PR workflow executes.
+"""
 from __future__ import annotations
 
 import base64
