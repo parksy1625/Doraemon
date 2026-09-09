@@ -1,4 +1,3 @@
-# trigger rebuild
 name: Build Nebula Air 1 Mod
 
 on:
@@ -24,7 +23,6 @@ jobs:
             -A "Mozilla/5.0" \
             "https://d.apkpure.net/b/XAPK/ai.nreal.nebula.universal?version=latest" \
             -o Nebula_3.8.1_original.xapk
-          ls -lh Nebula_3.8.1_original.xapk
           unzip -t Nebula_3.8.1_original.xapk >/dev/null
 
       - name: Extract XAPK
@@ -32,20 +30,19 @@ jobs:
           set -euxo pipefail
           mkdir xapk
           unzip -q Nebula_3.8.1_original.xapk -d xapk
-          find xapk -maxdepth 2 -type f -printf "%p %k KB\n" | sort
 
-      - name: Patch base APK compatibility data
+      - name: Patch compatibility and disable forced app-update gate
         run: |
           set -euxo pipefail
-          BASE="xapk/ai.nreal.nebula.universal.apk"
           python3 - <<'PY'
-          import zipfile, json, os, shutil, tempfile, re
+          import zipfile, json, re
           from pathlib import Path
 
+          # 1) Keep the v0.1 compatibility patch in the base APK.
           apk=Path("xapk/ai.nreal.nebula.universal.apk")
           tmp=apk.with_suffix(".patched.apk")
-          changed=[]
           found=[]
+          changed=[]
 
           def patch_obj(o, path="root"):
               edits=0
@@ -60,7 +57,6 @@ jobs:
                               edits+=1; changed.append(path+"."+str(k))
                       elif isinstance(v,(dict,list)):
                           edits += patch_obj(v, path+"."+str(k))
-                      # Add current Samsung model to explicit model allowlists when obvious.
                       if isinstance(v,list) and ("model" in kl or "device" in kl):
                           if all(isinstance(x,str) for x in v) and v and "SM-S911N" not in v:
                               if any(re.match(r"SM-[A-Z0-9-]+$", x) for x in v):
@@ -74,29 +70,49 @@ jobs:
           with zipfile.ZipFile(apk,"r") as zin, zipfile.ZipFile(tmp,"w") as zout:
               for info in zin.infolist():
                   data=zin.read(info.filename)
-                  low=info.filename.lower()
-                  if low.endswith("initdata.json"):
+                  if info.filename.lower().endswith("initdata.json"):
                       found.append(info.filename)
-                      try:
-                          obj=json.loads(data.decode("utf-8-sig"))
-                          n=patch_obj(obj, info.filename)
-                          if n:
-                              data=json.dumps(obj,ensure_ascii=False,separators=(",",":")).encode("utf-8")
-                      except Exception as e:
-                          print("WARN initData patch failed", info.filename, e)
-                  # Strip old signature files; apksigner will create new signatures.
+                      obj=json.loads(data.decode("utf-8-sig"))
+                      patch_obj(obj, info.filename)
+                      data=json.dumps(obj,ensure_ascii=False,separators=(",",":")).encode("utf-8")
                   if info.filename.startswith("META-INF/") and info.filename.upper().endswith((".RSA",".DSA",".EC",".SF",".MF")):
                       continue
-                  zout.writestr(info, data)
-
-          print("initData files:", found)
-          print("changed:", changed)
+                  zout.writestr(info,data)
           if not found:
-              raise SystemExit("initData.json not found in base APK")
+              raise SystemExit("initData.json not found")
           tmp.replace(apk)
+          print("Base patch:", changed)
+
+          # 2) Disable only the mandatory Nebula APP version-check endpoint in Flutter AOT.
+          #    Same-length replacement keeps the AOT string table layout intact.
+          cfg=Path("xapk/config.arm64_v8a.apk")
+          out=cfg.with_suffix(".patched.apk")
+          old=b"/api/nebula/v1/isc/admin/software/version/check"
+          new=b"/api/nebula/v1/isc/admin/software/version/chxxx"
+          assert len(old)==len(new)
+          patch_count=0
+
+          with zipfile.ZipFile(cfg,"r") as zin, zipfile.ZipFile(out,"w") as zout:
+              for info in zin.infolist():
+                  data=zin.read(info.filename)
+                  if info.filename=="lib/arm64-v8a/libapp.so":
+                      n=data.count(old)
+                      print("update endpoint occurrences:", n)
+                      if n:
+                          data=data.replace(old,new)
+                          patch_count += n
+                  if info.filename.startswith("META-INF/") and info.filename.upper().endswith((".RSA",".DSA",".EC",".SF",".MF")):
+                      continue
+                  zout.writestr(info,data)
+
+          if patch_count < 1:
+              raise SystemExit("Nebula app-update endpoint not found in libapp.so")
+          out.replace(cfg)
+          print("Forced app-update endpoint disabled, patches:", patch_count)
           PY
-          unzip -t "$BASE" >/dev/null
-          ls -lh "$BASE"
+
+          unzip -t xapk/ai.nreal.nebula.universal.apk >/dev/null
+          unzip -t xapk/config.arm64_v8a.apk >/dev/null
 
       - name: Install Android build tools
         run: |
@@ -122,7 +138,6 @@ jobs:
           mkdir -p signed
           for apk in xapk/*.apk; do
             name="$(basename "$apk")"
-            echo "Signing $name"
             zipalign -f -p 4 "$apk" "signed/$name.aligned.apk"
             apksigner sign \
               --ks nebula-air1-test.jks \
@@ -141,22 +156,22 @@ jobs:
           cp xapk/manifest.json signed/manifest.json
           [ -f xapk/icon.png ] && cp xapk/icon.png signed/icon.png || true
           cd signed
-          zip -0 -r ../Nebula_3.8.1_Air1_Mod_v0.1-test.xapk ./*
+          zip -0 -r ../Nebula_3.8.1_Air1_Mod_v0.2-test.xapk ./*
           cd ..
-          unzip -t Nebula_3.8.1_Air1_Mod_v0.1-test.xapk >/dev/null
-          sha256sum Nebula_3.8.1_Air1_Mod_v0.1-test.xapk | tee SHA256SUMS.txt
-          ls -lh Nebula_3.8.1_Air1_Mod_v0.1-test.xapk
+          unzip -t Nebula_3.8.1_Air1_Mod_v0.2-test.xapk >/dev/null
+          sha256sum Nebula_3.8.1_Air1_Mod_v0.2-test.xapk | tee SHA256SUMS-v0.2.txt
+          ls -lh Nebula_3.8.1_Air1_Mod_v0.2-test.xapk
 
       - name: Publish GitHub prerelease
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euxo pipefail
-          TAG="nebula-air1-v0.1-test"
+          TAG="nebula-air1-v0.2-test"
           gh release delete "$TAG" --yes --cleanup-tag || true
           gh release create "$TAG" \
-            "Nebula_3.8.1_Air1_Mod_v0.1-test.xapk" \
-            "SHA256SUMS.txt" \
-            --title "Nebula Air 1 Mod v0.1-test" \
+            "Nebula_3.8.1_Air1_Mod_v0.2-test.xapk" \
+            "SHA256SUMS-v0.2.txt" \
+            --title "Nebula Air 1 Mod v0.2-test" \
             --prerelease \
-            --notes "Experimental community test build for Nreal/XREAL Air 1. Based on Nebula 3.8.1. Compatibility data patched; all split APKs re-signed with the same local test key. Full on-device AR Space/3DoF validation is still pending."
+            --notes "v0.2-test: keeps the Air 1 compatibility patch from v0.1 and disables Nebula's mandatory APP version-check endpoint in libapp.so using a same-length AOT string patch. This is intended to bypass the no-cancel forced update screen while preserving glasses firmware OTA and AR Space code. Experimental; on-device validation still required."
